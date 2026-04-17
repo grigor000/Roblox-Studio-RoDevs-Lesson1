@@ -1,0 +1,87 @@
+local module = {}
+
+local Players = game:GetService("Players")
+
+module.Config = {
+	MaxSize = 100,
+	MinSize = 1,
+	AutoWeld = true,
+	KillOnTouch = true,
+}
+
+function module.ClampSize(size)
+	return Vector3.new(
+		math.clamp(size.X, module.Config.MinSize, module.Config.MaxSize),
+		math.clamp(size.Y, module.Config.MinSize, module.Config.MaxSize),
+		math.clamp(size.Z, module.Config.MinSize, module.Config.MaxSize)
+	)
+end
+
+function module.CreatePart(size, color, shape)
+	local part = Instance.new("Part")
+	part.Size = module.ClampSize(size)
+	part.BrickColor = color
+	part.Anchored = false
+	part.CanCollide = true
+	print(shape)
+	part.Shape = shape
+	part.Parent = workspace
+	return part
+end
+
+function module.ApplyPlacement(part, position, normal, orientation,size)
+	if size.X > 50 or size.Y > 50 or size.Z > 50 then
+		warn("Cant spawn object with size higher then 50 studs!")
+		part:Destroy()
+		return
+	end
+	
+	local offset = normal * (part.Size / 2)
+
+	part.CFrame =
+		CFrame.new(position + offset) *
+		CFrame.Angles(
+			math.rad(orientation.X),
+			math.rad(orientation.Y),
+			math.rad(orientation.Z)
+		)
+end
+
+function module.AddWeldOnTouch(part)
+	local con
+	con = part.Touched:Connect(function(hit)
+		if not hit or not hit.Parent then return end
+
+		local hum = hit.Parent:FindFirstChildOfClass("Humanoid")
+
+		if hum then
+			part:Destroy()
+			return
+		end
+
+		if module.Config.AutoWeld then
+			local weld = Instance.new("WeldConstraint")
+			weld.Part0 = part
+			weld.Part1 = hit
+			weld.Parent = part
+		end
+
+		con:Disconnect()
+	end)
+end
+
+function module.Place(plr, position, normal, orientation, size, color, shape)
+	local part = module.CreatePart(size, color, shape)
+
+	module.ApplyPlacement(part, position, normal, orientation, size)
+
+	if module.Config.AutoWeld or module.Config.KillOnTouch then
+		module.AddWeldOnTouch(part)
+	end
+
+	part:SetAttribute("Owner", plr.UserId)
+
+	return part
+end
+
+return module
