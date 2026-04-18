@@ -1,7 +1,5 @@
 local module = {}
 
-local Players = game:GetService("Players")
-
 module.Config = {
 	MaxSize = 100,
 	MinSize = 1,
@@ -23,28 +21,13 @@ function module.CreatePart(size, color, shape)
 	part.BrickColor = color
 	part.Anchored = false
 	part.CanCollide = true
-	print(shape)
 	part.Shape = shape
 	part.Parent = workspace
 	return part
 end
 
-function module.ApplyPlacement(part, position, normal, orientation,size)
-	if size.X > 50 or size.Y > 50 or size.Z > 50 then
-		warn("Cant spawn object with size higher then 50 studs!")
-		part:Destroy()
-		return
-	end
-	
-	local offset = normal * (part.Size / 2)
-
-	part.CFrame =
-		CFrame.new(position + offset) *
-		CFrame.Angles(
-			math.rad(orientation.X),
-			math.rad(orientation.Y),
-			math.rad(orientation.Z)
-		)
+function module.ApplyPlacement(part, cframe)
+	part.CFrame = cframe
 end
 
 function module.AddWeldOnTouch(part)
@@ -70,10 +53,10 @@ function module.AddWeldOnTouch(part)
 	end)
 end
 
-function module.Place(plr, position, normal, orientation, size, color, shape)
+function module.Place(plr, cframe, size, color, shape)
 	local part = module.CreatePart(size, color, shape)
 
-	module.ApplyPlacement(part, position, normal, orientation, size)
+	module.ApplyPlacement(part, cframe)
 
 	if module.Config.AutoWeld or module.Config.KillOnTouch then
 		module.AddWeldOnTouch(part)
