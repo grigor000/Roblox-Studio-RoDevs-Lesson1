@@ -5,22 +5,21 @@ local RemoveEvent = Rs:WaitForChild("RemoveConnection")
 
 local Module = require(Rs:WaitForChild("BuildingService"))
 
-PlaceEvent.OnServerEvent:Connect(function(plr, pos, normal, orientation, size, color, shape)
+PlaceEvent.OnServerEvent:Connect(function(plr, cframe, size, color, shape)
 	local char = plr.Character
 	if not char then return end
 
 	local hrp = char:FindFirstChild("HumanoidRootPart")
 	if not hrp then return end
 
-	if (hrp.Position - pos).Magnitude > 350 then return end
+	if (hrp.Position - cframe.Position).Magnitude > 350 then return end
 
-	Module.Place(plr, pos, normal, orientation, size, color, shape)
+	Module.Place(plr, cframe, size, color, shape)
 end)
 
 RemoveEvent.OnServerEvent:Connect(function(plr, part)
 	if typeof(part) ~= "Instance" then return end
 	if not part:IsA("BasePart") then return end
-
 	if part:GetAttribute("Owner") ~= plr.UserId then return end
 
 	local char = plr.Character
