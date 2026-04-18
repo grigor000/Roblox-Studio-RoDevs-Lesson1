@@ -4,4 +4,4 @@ Building Server script handles all important validations, such as checking wheth
 
 Building Module script receives data from the server and processes all placement parameters for creating the object.
 
-Video: https://medal.tv/games/roblox-studio/clips/mwWdJD7to1ETA1s1k?invite=cr-MSxBemssNDQ3NTM2MTg1
+Video: https://www.youtube.com/watch?v=t9_OGWWAvBc
