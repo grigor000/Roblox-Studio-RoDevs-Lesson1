@@ -43,8 +43,7 @@ local hrp = char:WaitForChild("HumanoidRootPart")
 local params = RaycastParams.new()
 params.FilterType = Enum.RaycastFilterType.Exclude
 
-local PositionToSend = Vector3.zero
-local NormalToSend = Vector3.new(0,1,0)
+local PositionToSend
 local OrientationToSend = Vector3.zero
 
 local function snap(n, step)
@@ -85,7 +84,7 @@ RunService.RenderStepped:Connect(function()
 
 	button.Text = "Disable"
 	obj.Shape = currentShape
-	
+
 	local ignore = {obj}
 	for _, v in pairs(game.Players:GetPlayers()) do
 		if v.Character then
@@ -129,24 +128,27 @@ RunService.RenderStepped:Connect(function()
 		return
 	end
 
-	local pos = ray.Position
-	local normal = ray.Normal
-
-	local snapped = Vector3.new(
-		snap(pos.X, grid),
-		snap(pos.Y, grid),
-		snap(pos.Z, grid)
+	local pos = Vector3.new(
+		snap(ray.Position.X, grid),
+		snap(ray.Position.Y, grid),
+		snap(ray.Position.Z, grid)
 	)
 
 	currentOrientation = currentOrientation:Lerp(targetOrientation, ROT_SPEED)
 
-	local offset = normal * (obj.Size / 2)
+	local normal = ray.Normal
 
-	obj.Position = snapped + offset
-	obj.Orientation = currentOrientation
+	local cf =
+		CFrame.new(pos + normal * (obj.Size.Y / 2)) *
+		CFrame.Angles(
+			math.rad(currentOrientation.X),
+			math.rad(currentOrientation.Y),
+			math.rad(currentOrientation.Z)
+		)
 
-	PositionToSend = snapped
-	NormalToSend = normal
+	obj.CFrame = cf
+
+	PositionToSend = cf
 	OrientationToSend = currentOrientation
 end)
 
@@ -161,33 +163,11 @@ mouse.Button1Down:Connect(function()
 	end
 
 	PlaceEvent:FireServer(
-		PositionToSend,
-		NormalToSend,
-		OrientationToSend,
+		obj.CFrame,
 		obj.Size,
 		BrickColor.random(),
 		currentShape
 	)
-end)
-
-TextBox.FocusLost:Connect(function(enterPressed)
-	local text = TextBox.Text
-	if text == "" then return end
-
-	local function isSingleNumber(t)
-		return tonumber(t) ~= nil
-	end
-
-	if isSingleNumber(text) then
-		local n = tonumber(text)
-		TextBox.Text = n .. "," .. n .. "," .. n
-		return
-	end
-
-	local x, y, z = string.match(text, "%s*(%d+)%s*,%s*(%d+)%s*,%s*(%d+)%s*")
-	if x and y and z then
-		TextBox.Text = x .. "," .. y .. "," .. z
-	end
 end)
 
 UIS.InputBegan:Connect(function(input, gp)
@@ -196,32 +176,26 @@ UIS.InputBegan:Connect(function(input, gp)
 	if input.KeyCode == Enum.KeyCode.F then
 		en = not en
 
-	elseif input.KeyCode == Enum.KeyCode.R and en then
+	elseif input.KeyCode == Enum.KeyCode.R then
 		targetOrientation += Vector3.new(0,45,0)
 
-	elseif input.KeyCode == Enum.KeyCode.T and en then
+	elseif input.KeyCode == Enum.KeyCode.T then
 		targetOrientation += Vector3.new(45,0,0)
 
-	elseif input.KeyCode == Enum.KeyCode.Y and en then
+	elseif input.KeyCode == Enum.KeyCode.Y then
 		targetOrientation += Vector3.new(0,0,45)
-	elseif input.KeyCode == Enum.KeyCode.Z and en then
-		if mode == "Build" then
-			mode = "Remove"
-		else
-			mode = "Build"
-		end
-	elseif input.KeyCode == Enum.KeyCode.E and en then
+
+	elseif input.KeyCode == Enum.KeyCode.Z then
+		mode = (mode == "Build") and "Remove" or "Build"
+
+	elseif input.KeyCode == Enum.KeyCode.E then
 		shapeIndex += 1
-		if shapeIndex > #shapeList then
-			shapeIndex = 1
-		end
+		if shapeIndex > #shapeList then shapeIndex = 1 end
 		currentShape = shapeList[shapeIndex]
 
-	elseif input.KeyCode == Enum.KeyCode.Q and en then
+	elseif input.KeyCode == Enum.KeyCode.Q then
 		shapeIndex -= 1
-		if shapeIndex < 1 then
-			shapeIndex = #shapeList
-		end
+		if shapeIndex < 1 then shapeIndex = #shapeList end
 		currentShape = shapeList[shapeIndex]
 	end
 end)
